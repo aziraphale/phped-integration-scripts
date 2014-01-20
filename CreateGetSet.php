@@ -49,7 +49,7 @@ class CreateGetSet
             $varType = 'mixed';
 
             if ($phpDoc) {
-                if (preg_match('/^\s*\*\s*@var\s+(.+?)\s*$/im', $phpDoc, $m)) {
+                if (preg_match('/^\s*\*\s*@var\s+(.+?)\s*$/imS', $phpDoc, $m)) {
                     $varType = $m[1];
                 }
 
@@ -84,6 +84,28 @@ class CreateGetSet
         }
     }
 
+    public function ConsolidateMethods() {
+        $getMethods = $setMethods = array();
+
+        $getMethodPattern = '#(/\*\*([^*]|\*(?!/))+\*/\s*)?public\s+function\s+get[a-z0-9_]+\s*\(\s*\)\s*\{\s*return\s+\$this->[a-z0-9_]+\s*;\s*\}\s*#iSs';
+        $setMethodPattern = '#(/\*\*([^*]|\*(?!/))+\*/\s*)?public\s+function\s+set[a-z0-9_]+\s*\(\$\w+\)\s*\{\s*\$this->\w+\s*=\s*\$[a-z0-9_]+;\s*\}\s*#iSs';
+
+        preg_match_all($getMethodPattern, $this->Text, $getMatches);
+        preg_match_all($setMethodPattern, $this->Text, $setMatches);
+
+        foreach ($getMatches[0] as $m) {
+            $getMethods[] = $m;
+        }
+        foreach ($setMatches[0] as $m) {
+            $setMethods[] = $m;
+        }
+
+        $this->Text = preg_replace($getMethodPattern, '', $this->Text);
+        $this->Text = preg_replace($setMethodPattern, '', $this->Text);
+
+        $this->Text = preg_replace('/(?=\}\s*$)/', "\n    " . rtrim(join("", $getMethods)) . "\n\n    " . rtrim(join("", $setMethods)) . "\n", $this->Text);
+    }
+
     public function GetContent() {
         return $this->Text;
     }
@@ -91,5 +113,6 @@ class CreateGetSet
 
 $GetSet = new CreateGetSet();
 $GetSet->AddGettersSetters();
+$GetSet->ConsolidateMethods();
 echo $GetSet->GetContent();
 ?>
