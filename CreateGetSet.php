@@ -40,6 +40,11 @@ class CreateGetSet
         */
         preg_match_all("/(\/\*\*\s+.+?\*\/)?\s*?(\t*| *)(var|private|public|protected)\s+\\$([a-z0-9]+);/ims", $this->Text, $aMatches);
 
+        $className = false;
+        if (preg_match('/^\s*(?:abstract\s+)?class\s+(\w+)\b/im', $this->Text, $classNameMatches)) {
+            $className = $classNameMatches[1];
+        }
+
         foreach ($aMatches[self::K_VARNAME] as $i => $MemberVariable) {
             $phpDoc = $aMatches[self::K_PHPDOC][$i];
             $indent = $aMatches[self::K_INDENT][$i];
@@ -72,9 +77,9 @@ class CreateGetSet
             // If function Set{VariableName} is not found, create it
             if (!preg_match("/function\s+set" . $MemberVariableUC . "\s*\(/i", $this->Text)) {
                 // Comment this line out if you don't want to get PhpDocumentor comments
-                $replacementText .= "\n$indent\n$indent/**\n$indent * Set value of $MemberVariable\n$indent * \n$indent * @param $varType \$$MemberVariable\n$indent */";
+                $replacementText .= "\n$indent\n$indent/**\n$indent * Set value of $MemberVariable\n$indent * \n$indent * @param $varType \$$MemberVariable\n$indent * @return $className\n$indent */";
 
-                $replacementText .= "\n{$indent}public function set$MemberVariableUC(\$$MemberVariable) {\n$indent    \$this->$MemberVariable = \$$MemberVariable;\n$indent}";
+                $replacementText .= "\n{$indent}public function set$MemberVariableUC(\$$MemberVariable) {\n$indent    \$this->$MemberVariable = \$$MemberVariable;\n$indent    \$this->modifiedValues['$MemberVariable'] = \$this->$MemberVariable;\n{$indent}    return \$this;\n$indent}";
             }
 
 //            $this->Text = preg_replace("/" . $visibility . '\s+\\$' . $MemberVariable . ";/", $replacementText, $this->Text);
@@ -88,7 +93,7 @@ class CreateGetSet
         $getMethods = $setMethods = array();
 
         $getMethodPattern = '#(/\*\*([^*]|\*(?!/))+\*/\s*)?public\s+function\s+get[a-z0-9_]+\s*\(\s*\)\s*\{\s*return\s+\$this->[a-z0-9_]+\s*;\s*\}\s*#iSs';
-        $setMethodPattern = '#(/\*\*([^*]|\*(?!/))+\*/\s*)?public\s+function\s+set[a-z0-9_]+\s*\(\$\w+\)\s*\{\s*\$this->\w+\s*=\s*\$[a-z0-9_]+;\s*\}\s*#iSs';
+        $setMethodPattern = '#(/\*\*([^*]|\*(?!/))+\*/\s*)?public\s+function\s+set[a-z0-9_]+\s*\(\$\w+\)\s*\{\s*\$this->\w+\s*=\s*\$[a-z0-9_]+;.*?\s*\}\s*#iSs';
 
         preg_match_all($getMethodPattern, $this->Text, $getMatches);
         preg_match_all($setMethodPattern, $this->Text, $setMatches);
