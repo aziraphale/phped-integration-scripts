@@ -37,7 +37,7 @@ Wordwrap the selected text to the given right margin. Keeps the existing right i
 
 ** Configuration: **
 - **Execute with**: Shell
-- **Command line**: `C:\Path\To\php.exe -q "C:\Path\To\php-integration-scripts\WrapLines.php"`
+- **Command line**: `C:\Path\To\php.exe -q "C:\Path\To\php-integration-scripts\WrapLines.php" 120` *(change `120` to your desired line length)*
 - **Show this command in Tools menu** :ballot_box_with_check:
 - **Show this command in File Bar popup** :ballot_box_with_check:
 - **Work with editor** :ballot_box_with_check:
